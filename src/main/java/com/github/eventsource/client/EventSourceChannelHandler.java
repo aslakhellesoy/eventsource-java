@@ -3,6 +3,7 @@ package com.github.eventsource.client;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.BigEndianHeapChannelBuffer;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -49,6 +50,11 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
         this.uri = uri;
         this.eventSourceHandler = eventSourceHandler;
         this.messageDispatcher = new MessageDispatcher(this, uri.toString());
+    }
+
+    @Override
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
+        super.handleUpstream(ctx, e);
     }
 
     @Override
