@@ -44,6 +44,7 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
 
     public EventSourceChannelHandler(Executor executor, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri, EventSourceClientHandler eventSourceHandler) {
         this.executor = executor;
+        this.reconnectionTimeMillis = reconnectionTimeMillis;
         this.bootstrap = bootstrap;
         this.uri = uri;
         this.eventSourceHandler = eventSourceHandler;

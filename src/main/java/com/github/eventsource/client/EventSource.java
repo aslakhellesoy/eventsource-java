@@ -19,6 +19,16 @@ public class EventSource {
     private final ClientBootstrap bootstrap;
     private final EventSourceChannelHandler clientHandler;
 
+    /**
+     * Creates a new client. The client will reconnect on lost connections automatically, unless the connection
+     * is closed explicitly by a call to {@link com.github.eventsource.client.EventSource#close()}.
+     *
+     * @param executor the executor that will receive events
+     * @param reconnectionTimeMillis delay before a reconnect is made - in the event of a lost connection
+     * @param uri where to connect
+     * @param eventSourceHandler receives events
+     * @see #close()
+     */
     public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceClientHandler eventSourceHandler) {
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
