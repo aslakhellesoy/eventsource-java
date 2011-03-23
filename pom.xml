@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.event-source-client</groupId>
-    <artifactId>event-source-client</artifactId>
+    <groupId>com.github.eventsource</groupId>
+    <artifactId>eventsource.client</artifactId>
     <name>${project.artifactId}</name>
-    <description>A Java implementation of EventSource</description>
-    <url>http://event-source-client.github.com/</url>
+    <description>A Java EventSource Client</description>
+    <url>http://eventsource.github.com/</url>
     <version>0.1.0</version>
     <packaging>jar</packaging>
     <parent>
@@ -21,9 +21,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/aslakhellesoy/event-source-client-java.git</connection>
-        <developerConnection>scm:git:git@github.com:aslakhellesoy/event-source-client-java.git</developerConnection>
-        <url>git://github.com/aslakhellesoy/event-source-client-java.git</url>
+        <connection>scm:git:git://github.com/aslakhellesoy/eventsource-java.git</connection>
+        <developerConnection>scm:git:git@github.com:aslakhellesoy/eventsource-java.git</developerConnection>
+        <url>git://github.com/aslakhellesoy/eventsource-java.git</url>
     </scm>
     <repositories>
         <repository>
