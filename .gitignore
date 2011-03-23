@@ -1,0 +1,12 @@
+target
+out
+*.iws
+*.swp
+*.iml
+*.ipr
+.idea
+release.properties
+pom.xml.releaseBackup
+.DS_Store
+
+pom.xml.asc
