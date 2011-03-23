@@ -28,7 +28,8 @@ public class BurstServer {
     private static class BurstHandler implements EventSourceHandler {
         @Override
         public void onOpen(EventSourceConnection connection) throws Exception {
-            sleep(1);
+            System.out.println("connection = " + connection);
+            sleep(200);
             for (int i = 0; i < 10; i++) {
                 String event = new EventSourceMessage().data(String.valueOf(i)).end().toString();
                 connection.send(event);
