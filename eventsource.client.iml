@@ -15,7 +15,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="webbit" />
     <orderEntry type="library" name="Maven: org.jboss.netty:netty:3.2.4.Final" level="project" />
     <orderEntry type="module" module-name="webbit" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
