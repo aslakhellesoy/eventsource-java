@@ -6,8 +6,10 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
+import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.http.HttpRequestEncoder;
-import org.jboss.netty.handler.codec.http.HttpResponseDecoder;
+import org.jboss.netty.handler.codec.string.StringDecoder;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -20,9 +22,12 @@ public class EventSource {
     private final EventSourceChannelHandler clientHandler;
 
     /**
-     * Creates a new client. The client will reconnect on lost connections automatically, unless the connection
-     * is closed explicitly by a call to {@link com.github.eventsource.client.EventSource#close()}.
+     * Creates a new <a href="http://dev.w3.org/html5/eventsource/">EventSource</a> client. The client will reconnect on 
+     * lost connections automatically, unless the connection is closed explicitly by a call to 
+     * {@link com.github.eventsource.client.EventSource#close()}.
      *
+     * For sample usage, see examples at <a href="https://github.com/aslakhellesoy/eventsource-java/tree/master/src/test/java/com/github/eventsource/client">GitHub</a>.
+     * 
      * @param executor the executor that will receive events
      * @param reconnectionTimeMillis delay before a reconnect is made - in the event of a lost connection
      * @param uri where to connect
@@ -41,7 +46,9 @@ public class EventSource {
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("decoder", new HttpResponseDecoder());
+                pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
+                pipeline.addLast("string", new StringDecoder());
+
                 pipeline.addLast("encoder", new HttpRequestEncoder());
                 pipeline.addLast("es-handler", clientHandler);
                 return pipeline;
@@ -68,7 +75,7 @@ public class EventSource {
     }
 
     /**
-     * Wait for until the connection is closed
+     * Wait until the connection is closed
      *
      * @return self
      * @throws InterruptedException if waiting was interrupted

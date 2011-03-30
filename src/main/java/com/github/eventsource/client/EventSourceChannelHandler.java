@@ -1,21 +1,12 @@
 package com.github.eventsource.client;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.BigEndianHeapChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.Timeout;
@@ -23,12 +14,15 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements MessageEmitter {
-
+    private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
+    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
+    
     private final Executor executor;
     private final ClientBootstrap bootstrap;
     private final URI uri;
@@ -36,12 +30,14 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
     private final MessageDispatcher messageDispatcher;
     private final Timer timer = new HashedWheelTimer();
 
-    private boolean needResponse = true;
     private Channel channel;
     private boolean connecting = false;
     private boolean reconnectOnClose = true;
     private long reconnectionTimeMillis;
     private String lastEventId;
+    private boolean eventStreamOk;
+    private boolean headerDone;
+    private Integer status;
 
     public EventSourceChannelHandler(Executor executor, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri, EventSourceClientHandler eventSourceHandler) {
         this.executor = executor;
@@ -75,7 +71,6 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         emitDisconnect();
-        needResponse = true;
         channel = null;
     }
 
@@ -94,25 +89,34 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        if (needResponse) {
-            HttpResponse response = (HttpResponse) e.getMessage();
-
-            final boolean validStatus = response.getStatus().getCode() == 200;
-            final boolean validUpgrade = response.getHeader(Names.CONTENT_TYPE).equals("text/event-stream");
-
-            if (!validStatus || !validUpgrade) {
-                throw new EventSourceException("Invalid response:" + response.toString());
+        String line = (String) e.getMessage();
+        if(status == null) {
+            Matcher statusMatcher = STATUS_PATTERN.matcher(line);
+            if(statusMatcher.matches()) {
+                status = Integer.parseInt(statusMatcher.group(1));
+                if(status != 200) {
+                    throw new RuntimeException("Bad status: " + status);
+                }
+                return;
+            } else {
+                throw new RuntimeException("Not HTTP? " + line);
             }
-
-            needResponse = false;
-            ctx.getPipeline().replace("decoder", "es-decoder", new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-            emitConnect();
-            return;
         }
-
-        BigEndianHeapChannelBuffer frame = (BigEndianHeapChannelBuffer) e.getMessage();
-        String line = frame.toString(Charset.forName("UTF-8"));
-        messageDispatcher.line(line);
+        if(!headerDone) {
+            if(CONTENT_TYPE_PATTERN.matcher(line).matches()) {
+                eventStreamOk = true;
+            }
+            if(line.isEmpty()) {
+                headerDone = true;
+                if(eventStreamOk) {
+                    emitConnect();
+                } else {
+                    throw new RuntimeException("Not event stream");
+                }
+            }
+        } else {
+            messageDispatcher.line(line);
+        }
     }
 
     @Override

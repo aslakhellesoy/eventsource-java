@@ -24,11 +24,11 @@ public class BurstClient {
 
             @Override
             public void onError(Throwable t) {
+                System.err.println("ON ERROR");
                 t.printStackTrace();
             }
         });
         es.connect();
-        sleep(1000);
         es.close().join();
     }
 }

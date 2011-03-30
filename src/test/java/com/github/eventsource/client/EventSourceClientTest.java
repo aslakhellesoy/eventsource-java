@@ -1,9 +1,8 @@
 package com.github.eventsource.client;
 
-import com.github.eventsource.client.EventSource;
-import com.github.eventsource.client.EventSourceClientHandler;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.webbitserver.EventSourceConnection;
 import org.webbitserver.EventSourceHandler;
@@ -17,7 +16,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -103,10 +101,6 @@ public class EventSourceClientTest {
                 .add("/es/.*", new EventSourceHandler() {
                     @Override
                     public void onOpen(EventSourceConnection connection) throws Exception {
-                        // Need to sleep a little before sending messages back to client. This is because of a race condition in the
-                        // client's handshake logic. TODO: Read up on http://bruno.biasedbit.com/blag/2010/07/15/handshaking-tutorial-with-netty/
-                        // and do this properly.
-                        sleep(100);
                         for (String message : messagesToSend) {
                             String data = message + " " + connection.httpRequest().queryParam("echoThis");
                             String event = new EventSourceMessage().data(data).end().toString();
