@@ -44,7 +44,7 @@
         <dependency>
             <groupId>org.webbitserver</groupId>
             <artifactId>webbit</artifactId>
-            <version>0.1.5</version>
+            <version>0.1.10</version>
             <scope>test</scope>
         </dependency>
         <dependency>
