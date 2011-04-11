@@ -1,5 +1,7 @@
 package com.github.eventsource.client;
 
+import com.github.eventsource.client.impl.ConnectionHandler;
+import com.github.eventsource.client.impl.EventStreamParser;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,15 +10,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-public class MessageDispatcherTest {
+public class EventStreamParserTest {
     private static final String ORIGIN = "http://host.com:99/foo";
-    public com.github.eventsource.client.MessageEmitter h;
-    public com.github.eventsource.client.MessageDispatcher md;
+    public EventSourceHandler eh;
+    public ConnectionHandler ch;
+    public EventStreamParser md;
 
     @Before
     public void setup() {
-        h = mock(com.github.eventsource.client.MessageEmitter.class);
-        md = new com.github.eventsource.client.MessageDispatcher(h, ORIGIN);
+        eh = mock(EventSourceHandler.class);
+        ch = mock(ConnectionHandler.class);
+        md = new EventStreamParser(eh, ORIGIN, ch);
     }
 
     @Test
@@ -24,7 +28,7 @@ public class MessageDispatcherTest {
         md.line("data: hello");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("hello", null, ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("hello", null, ORIGIN)));
     }
 
     @Test
@@ -33,8 +37,8 @@ public class MessageDispatcherTest {
         md.line("");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("hello", null, ORIGIN)));
-        verifyNoMoreInteractions(h);
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("hello", null, ORIGIN)));
+        verifyNoMoreInteractions(eh);
     }
 
     @Test
@@ -43,7 +47,7 @@ public class MessageDispatcherTest {
         md.line("id: 1");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("hello", "1", ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("hello", "1", ORIGIN)));
     }
 
     @Test
@@ -52,7 +56,7 @@ public class MessageDispatcherTest {
         md.line("event: beeroclock");
         md.line("");
 
-        verify(h).emitMessage(eq("beeroclock"), eq(new com.github.eventsource.client.MessageEvent("hello", null, ORIGIN)));
+        verify(eh).onMessage(eq("beeroclock"), eq(new MessageEvent("hello", null, ORIGIN)));
     }
 
     @Test
@@ -62,7 +66,7 @@ public class MessageDispatcherTest {
         md.line(": this too");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("hello", null, ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("hello", null, ORIGIN)));
     }
 
     @Test
@@ -70,7 +74,7 @@ public class MessageDispatcherTest {
         md.line("data");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("", null, ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("", null, ORIGIN)));
     }
 
     @Test
@@ -78,7 +82,7 @@ public class MessageDispatcherTest {
         md.line("retry: 7000");
         md.line("");
 
-        verify(h).setReconnectionTime(7000);
+        verify(ch).setReconnectionTime(7000);
     }
 
     @Test
@@ -86,7 +90,7 @@ public class MessageDispatcherTest {
         md.line("retry: 7000L");
         md.line("");
 
-        verifyNoMoreInteractions(h);
+        verifyNoMoreInteractions(eh);
     }
 
     @Test
@@ -97,7 +101,7 @@ public class MessageDispatcherTest {
         md.line("data: world");
         md.line("");
 
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("hello", "reused", ORIGIN)));
-        verify(h).emitMessage(eq("message"), eq(new com.github.eventsource.client.MessageEvent("world", "reused", ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("hello", "reused", ORIGIN)));
+        verify(eh).onMessage(eq("message"), eq(new MessageEvent("world", "reused", ORIGIN)));
     }
 }

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AntConfiguration">
+    <defaultAnt bundledAnt="true" />
+  </component>
   <component name="CompilerConfiguration">
     <option name="DEFAULT_COMPILER" value="Javac" />
     <resourceExtensions>
@@ -27,6 +30,10 @@
     <option name="SKIP_IMPORT_STATEMENTS" value="false" />
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
+  <component name="EntryPointsManager">
+    <entry_points version="2.0" />
+  </component>
+  <component name="IdProvider" IDEtalkID="61364353657B3AECBDEE1F827B67CC13" />
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-target 1.6" />
   </component>
@@ -46,6 +53,32 @@
     <option name="HEAP_SIZE" />
     <option name="LOCALE" />
     <option name="OPEN_IN_BROWSER" value="true" />
+  </component>
+  <component name="MavenBuildProjectComponent">
+    <option name="mavenExecutable" value="" />
+    <option name="Settings File" value="" />
+    <option name="mavenCommandLineParams" value="" />
+    <option name="vmOptions" value="" />
+    <option name="useMavenEmbedder" value="false" />
+    <option name="useFilter" value="false" />
+    <option name="Batch Mode" value="false" />
+    <option name="Check Plugin Updates" value="false" />
+    <option name="Debug" value="false" />
+    <option name="Errors" value="false" />
+    <option name="Fail At End" value="false" />
+    <option name="Fail Fast" value="false" />
+    <option name="Fail Never" value="false" />
+    <option name="Lax Checksums" value="false" />
+    <option name="No Plugin Registry" value="false" />
+    <option name="No Plugin Updates" value="false" />
+    <option name="Non Recursive" value="false" />
+    <option name="Offline" value="false" />
+    <option name="Reactor" value="false" />
+    <option name="Strict Checksums" value="false" />
+    <option name="Update Plugins" value="false" />
+    <option name="Update Snapshots" value="false" />
+    <option name="Skip Tests" value="false" />
+    <pom-list />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
@@ -187,7 +220,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/eventsource.client.iml" filepath="$PROJECT_DIR$/eventsource.client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/eventsource-client.iml" filepath="$PROJECT_DIR$/eventsource-client.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
@@ -230,15 +263,15 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-all/1.8.5/mockito-all-1.8.5-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.webbitserver:webbit:0.1.5">
+    <library name="Maven: org.webbitserver:webbit:0.1.11">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.5/webbit-0.1.5.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.5/webbit-0.1.5-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.5/webbit-0.1.5-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11-sources.jar!/" />
       </SOURCES>
     </library>
   </component>

@@ -1,12 +1,15 @@
-package com.github.eventsource.client;
+package com.github.eventsource.client.impl;
+
+import com.github.eventsource.client.EventSourceHandler;
+import com.github.eventsource.client.MessageEvent;
 
 import java.util.regex.Pattern;
 
 /**
  * <a href="http://dev.w3.org/html5/eventsource/#event-stream-interpretation">Interprets an event stream</a>
- * and dispatches messages to the {@link EventSourceClientHandler}.
+ * and dispatches messages to the {@link com.github.eventsource.client.EventSourceHandler}.
  */
-class MessageDispatcher {
+public class EventStreamParser {
     private static final String DATA = "data";
     private static final String ID = "id";
     private static final String EVENT = "event";
@@ -16,16 +19,18 @@ class MessageDispatcher {
     private static final String EMPTY_STRING = "";
     private static final Pattern DIGITS_ONLY = Pattern.compile("^[\\d]+$");
 
-    private final MessageEmitter messageEmitter;
+    private final EventSourceHandler eventSourceHandler;
+    private final ConnectionHandler connectionHandler;
     private final String origin;
 
     private StringBuffer data = new StringBuffer();
     private String lastEventId;
     private String eventName = DEFAULT_EVENT;
 
-    public MessageDispatcher(MessageEmitter messageEmitter, String origin) {
-        this.messageEmitter = messageEmitter;
+    public EventStreamParser(EventSourceHandler eventSourceHandler, String origin, ConnectionHandler connectionHandler) {
+        this.eventSourceHandler = eventSourceHandler;
         this.origin = origin;
+        this.connectionHandler = connectionHandler;
     }
 
     public void line(String line) {
@@ -51,7 +56,7 @@ class MessageDispatcher {
         } else if (EVENT.equals(field)) {
             eventName = value;
         } else if (RETRY.equals(field) && isNumber(value)) {
-            messageEmitter.setReconnectionTime(Long.parseLong(value));
+            connectionHandler.setReconnectionTime(Long.parseLong(value));
         }
     }
 
@@ -68,7 +73,12 @@ class MessageDispatcher {
             dataString = dataString.substring(0, dataString.length() - 1);
         }
         MessageEvent message = new MessageEvent(dataString, lastEventId, origin);
-        messageEmitter.emitMessage(eventName, message);
+        connectionHandler.setLastEventId(lastEventId);
+        try {
+            eventSourceHandler.onMessage(eventName, message);
+        } catch (Exception e) {
+            eventSourceHandler.onError(e);
+        }
         data = new StringBuffer();
         eventName = DEFAULT_EVENT;
     }

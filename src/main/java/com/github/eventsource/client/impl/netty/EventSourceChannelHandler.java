@@ -1,8 +1,16 @@
-package com.github.eventsource.client;
+package com.github.eventsource.client.impl.netty;
 
+import com.github.eventsource.client.impl.ConnectionHandler;
+import com.github.eventsource.client.EventSourceHandler;
+import com.github.eventsource.client.impl.EventStreamParser;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
 import org.jboss.netty.handler.codec.http.HttpMethod;
@@ -14,22 +22,20 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
 import java.net.URI;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements MessageEmitter {
+public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
     private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
-    
-    private final Executor executor;
+
+    private final EventSourceHandler eventSourceHandler;
     private final ClientBootstrap bootstrap;
     private final URI uri;
-    private final EventSourceClientHandler eventSourceHandler;
-    private final MessageDispatcher messageDispatcher;
-    private final Timer timer = new HashedWheelTimer();
+    private final EventStreamParser messageDispatcher;
 
+    private final Timer timer = new HashedWheelTimer();
     private Channel channel;
     private boolean connecting = false;
     private boolean reconnectOnClose = true;
@@ -39,13 +45,12 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
     private boolean headerDone;
     private Integer status;
 
-    public EventSourceChannelHandler(Executor executor, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri, EventSourceClientHandler eventSourceHandler) {
-        this.executor = executor;
+    public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri) {
+        this.eventSourceHandler = eventSourceHandler;
         this.reconnectionTimeMillis = reconnectionTimeMillis;
         this.bootstrap = bootstrap;
         this.uri = uri;
-        this.eventSourceHandler = eventSourceHandler;
-        this.messageDispatcher = new MessageDispatcher(this, uri.toString());
+        this.messageDispatcher = new EventStreamParser(eventSourceHandler, uri.toString(), this);
     }
 
     @Override
@@ -70,7 +75,8 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        emitDisconnect();
+        Throwable ex = (Throwable) e.getValue();
+        eventSourceHandler.onError(ex);
         channel = null;
     }
 
@@ -109,7 +115,7 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
             if(line.isEmpty()) {
                 headerDone = true;
                 if(eventStreamOk) {
-                    emitConnect();
+                    eventSourceHandler.onConnect();
                 } else {
                     throw new RuntimeException("Not event stream");
                 }
@@ -122,13 +128,17 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         Throwable error = e.getCause();
-        emitError(error);
+        eventSourceHandler.onError(error);
         ctx.getChannel().close();
     }
 
-    @Override
     public void setReconnectionTime(long reconnectionTimeMillis) {
         this.reconnectionTimeMillis = reconnectionTimeMillis;
+    }
+
+    @Override
+    public void setLastEventId(String lastEventId) {
+        this.lastEventId = lastEventId;
     }
 
     public EventSourceChannelHandler close() {
@@ -146,42 +156,4 @@ class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements 
         return this;
     }
 
-    private void emitConnect() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                eventSourceHandler.onConnect();
-            }
-        });
-    }
-
-    private void emitDisconnect() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                eventSourceHandler.onDisconnect();
-            }
-        });
-    }
-
-    private void emitError(final Throwable error) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                eventSourceHandler.onError(error);
-            }
-        });
-    }
-
-    public void emitMessage(final String event, final com.github.eventsource.client.MessageEvent message) {
-        if (message.lastEventId != null) {
-            lastEventId = message.lastEventId;
-        }
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                eventSourceHandler.onMessage(event, message);
-            }
-        });
-    }
 }

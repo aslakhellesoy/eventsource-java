@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.webbitserver.EventSourceConnection;
-import org.webbitserver.EventSourceHandler;
 import org.webbitserver.WebServer;
 import org.webbitserver.netty.contrib.EventSourceMessage;
 
@@ -52,12 +51,57 @@ public class EventSourceClientTest {
     }
 
     @Test
-    public void reconnectsIfServerIsDown() throws Exception {
+    public void reconnectsIfServerIsDownAtCreationTime() throws Exception {
         List<String> messages = asList("a", "b");
         CountDownLatch messageCountdown = new CountDownLatch(messages.size());
-        CountDownLatch errorCountdown = new CountDownLatch(0);
+        CountDownLatch errorCountdown = new CountDownLatch(1);
         startClient(messages, messageCountdown, errorCountdown, 100);
         startServer(messages);
+        assertTrue("Didn't get an error on first failed connection", errorCountdown.await(2000, TimeUnit.MILLISECONDS));
+        assertTrue("Didn't get all messages", messageCountdown.await(2000, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    @Ignore
+    public void reconnectsIfServerGoesDownAfterConnectionEstablished() throws Exception {
+        final CountDownLatch messageCountdown = new CountDownLatch(2);
+        final CountDownLatch errorCountdown = new CountDownLatch(1);
+
+        webServer
+                .add("/es/.*", new org.webbitserver.EventSourceHandler() {
+                    @Override
+                    public void onOpen(EventSourceConnection connection) throws Exception {
+                        String event = new EventSourceMessage().data("hello").end().toString();
+                        connection.send(event);
+                    }
+
+                    @Override
+                    public void onClose(EventSourceConnection connection) throws Exception {
+                    }
+                });
+        webServer.start();
+
+
+        eventSource = new EventSource(Executors.newSingleThreadExecutor(), 1000, URI.create("http://localhost:59504/es/hello"), new EventSourceHandler() {
+            @Override
+            public void onConnect() {
+            }
+
+            @Override
+            public void onMessage(String event, MessageEvent message) throws IOException {
+                System.out.println("MESSAGE:" + message.data);
+                messageCountdown.countDown();
+                webServer.stop();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("ERROR: " + t);
+                errorCountdown.countDown();
+            }
+        });
+        eventSource.connect();
+
         assertTrue("Didn't get an error on first failed connection", errorCountdown.await(2000, TimeUnit.MILLISECONDS));
         assertTrue("Didn't get all messages", messageCountdown.await(2000, TimeUnit.MILLISECONDS));
     }
@@ -70,15 +114,11 @@ public class EventSourceClientTest {
     }
 
     private void startClient(final List<String> expectedMessages, final CountDownLatch messageCountdown, final CountDownLatch errorCountdown, long reconnectionTimeMillis) throws InterruptedException {
-        eventSource = new EventSource(Executors.newSingleThreadExecutor(), reconnectionTimeMillis, URI.create("http://localhost:59504/es/hello?echoThis=yo"), new EventSourceClientHandler() {
+        eventSource = new EventSource(Executors.newSingleThreadExecutor(), reconnectionTimeMillis, URI.create("http://localhost:59504/es/hello?echoThis=yo"), new EventSourceHandler() {
             int n = 0;
 
             @Override
             public void onConnect() {
-            }
-
-            @Override
-            public void onDisconnect() {
             }
 
             @Override
@@ -98,7 +138,7 @@ public class EventSourceClientTest {
 
     private void startServer(final List<String> messagesToSend) throws IOException {
         webServer
-                .add("/es/.*", new EventSourceHandler() {
+                .add("/es/.*", new org.webbitserver.EventSourceHandler() {
                     @Override
                     public void onOpen(EventSourceConnection connection) throws Exception {
                         for (String message : messagesToSend) {

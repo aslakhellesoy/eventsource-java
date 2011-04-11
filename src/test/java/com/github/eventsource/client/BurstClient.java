@@ -2,11 +2,9 @@ package com.github.eventsource.client;
 
 import java.net.URI;
 
-import static java.lang.Thread.sleep;
-
 public class BurstClient {
     public static void main(String[] args) throws InterruptedException {
-        EventSource es = new EventSource(URI.create("http://localhost:8090/es"), new EventSourceClientHandler() {
+        EventSource es = new EventSource(URI.create("http://localhost:8090/es"), new EventSourceHandler() {
             @Override
             public void onConnect() {
                 System.out.println("CONNECTED");
@@ -15,11 +13,6 @@ public class BurstClient {
             @Override
             public void onMessage(String event, MessageEvent message) {
                 System.out.println("message = " + message.data);
-            }
-
-            @Override
-            public void onDisconnect() {
-                System.out.println("DISCONNECTED");
             }
 
             @Override

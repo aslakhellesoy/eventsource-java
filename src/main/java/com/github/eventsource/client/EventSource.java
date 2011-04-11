@@ -1,5 +1,7 @@
 package com.github.eventsource.client;
 
+import com.github.eventsource.client.impl.AsyncEventSourceHandler;
+import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -16,10 +18,17 @@ import java.net.URI;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class EventSource {
+public class EventSource  {
     public static final long DEFAULT_RECONNECTION_TIME_MILLIS = 2000;
+
+    public static final int CONNECTING = 0;
+    public static final int OPEN = 1;
+    public static final int CLOSED = 2;
+
     private final ClientBootstrap bootstrap;
     private final EventSourceChannelHandler clientHandler;
+
+    private int readyState;
 
     /**
      * Creates a new <a href="http://dev.w3.org/html5/eventsource/">EventSource</a> client. The client will reconnect on 
@@ -34,14 +43,14 @@ public class EventSource {
      * @param eventSourceHandler receives events
      * @see #close()
      */
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceClientHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
                         Executors.newSingleThreadExecutor(),
                         Executors.newSingleThreadExecutor()));
         bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
 
-        clientHandler = new EventSourceChannelHandler(executor, reconnectionTimeMillis, bootstrap, uri, eventSourceHandler);
+        clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
 
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() throws Exception {
@@ -56,11 +65,16 @@ public class EventSource {
         });
     }
 
-    public EventSource(URI uri, EventSourceClientHandler eventSourceHandler) {
+    public EventSource(String uri, EventSourceHandler eventSourceHandler) {
+        this(URI.create(uri), eventSourceHandler);
+    }
+
+    public EventSource(URI uri, EventSourceHandler eventSourceHandler) {
         this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, eventSourceHandler);
     }
 
     public ChannelFuture connect() {
+        readyState = CONNECTING;
         return bootstrap.connect();
     }
 

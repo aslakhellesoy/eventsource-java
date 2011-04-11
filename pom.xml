@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.aslakhellesoy</groupId>
-    <artifactId>eventsource-java</artifactId>
+    <artifactId>eventsource-client</artifactId>
     <name>${project.artifactId}</name>
     <description>A Java EventSource Client</description>
     <url>http://aslakhellesoy.github.com/eventsource-java</url>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -26,11 +26,12 @@
     </scm>
     <repositories>
         <repository>
+            <id>oss.sonatype.org</id>
+            <url>https://oss.sonatype.org/content/repositories/public/</url>
+        </repository>
+        <repository>
             <id>repository.jboss.org</id>
             <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
         </repository>
     </repositories>
     <dependencies>
@@ -43,7 +44,7 @@
         <dependency>
             <groupId>org.webbitserver</groupId>
             <artifactId>webbit</artifactId>
-            <version>0.1.10</version>
+            <version>0.1.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>
