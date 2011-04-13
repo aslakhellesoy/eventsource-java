@@ -5,7 +5,7 @@
     <name>${project.artifactId}</name>
     <description>A Java EventSource Client</description>
     <url>http://aslakhellesoy.github.com/eventsource-java</url>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
     <parent>
         <groupId>org.sonatype.oss</groupId>
