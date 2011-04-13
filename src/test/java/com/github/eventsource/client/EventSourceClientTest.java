@@ -72,8 +72,7 @@ public class EventSourceClientTest {
 
                     @Override
                     public void onOpen(EventSourceConnection connection) throws Exception {
-                        String event = new EventSourceMessage().data(Integer.toString(counter++)).end().toString();
-                        connection.send(event);
+                        connection.send(new EventSourceMessage(Integer.toString(counter++)));
                     }
 
                     @Override
@@ -165,8 +164,7 @@ public class EventSourceClientTest {
                     public void onOpen(EventSourceConnection connection) throws Exception {
                         for (String message : messagesToSend) {
                             String data = message + " " + connection.httpRequest().queryParam("echoThis");
-                            String event = new EventSourceMessage().data(data).end().toString();
-                            connection.send(event);
+                            connection.send(new EventSourceMessage(data));
                         }
                     }
 

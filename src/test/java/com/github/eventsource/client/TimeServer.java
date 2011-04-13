@@ -32,12 +32,11 @@ public class TimeServer {
             System.out.println("OPEN - HEADERS = " + connection.httpRequest().allHeaders());
             while(true) {
                 Date date = new Date();
-                String event = new EventSourceMessage()
+                EventSourceMessage message = new EventSourceMessage()
                         .data(date.toString())
                         .id(date.getTime())
-                        .event("event-" + date.getTime())
-                        .build();
-                connection.send(event);
+                        .event("event-" + date.getTime());
+                connection.send(message);
                 sleep(1000);
             }
         }
