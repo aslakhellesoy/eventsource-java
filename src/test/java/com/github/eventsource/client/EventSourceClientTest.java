@@ -2,7 +2,6 @@ package com.github.eventsource.client;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.webbitserver.EventSourceConnection;
 import org.webbitserver.WebServer;
@@ -62,16 +61,18 @@ public class EventSourceClientTest {
     }
 
     @Test
-    @Ignore
     public void reconnectsIfServerGoesDownAfterConnectionEstablished() throws Exception {
-        final CountDownLatch messageCountdown = new CountDownLatch(2);
+        final CountDownLatch messageOneCountdown = new CountDownLatch(1);
+        final CountDownLatch messageTwoCountdown = new CountDownLatch(1);
         final CountDownLatch errorCountdown = new CountDownLatch(1);
 
         webServer
                 .add("/es/.*", new org.webbitserver.EventSourceHandler() {
+                    public int counter = 1;
+
                     @Override
                     public void onOpen(EventSourceConnection connection) throws Exception {
-                        String event = new EventSourceMessage().data("hello").end().toString();
+                        String event = new EventSourceMessage().data(Integer.toString(counter++)).end().toString();
                         connection.send(event);
                     }
 
@@ -89,9 +90,13 @@ public class EventSourceClientTest {
 
             @Override
             public void onMessage(String event, MessageEvent message) throws IOException {
-                System.out.println("MESSAGE:" + message.data);
-                messageCountdown.countDown();
-                webServer.stop();
+                if (message.data.equals("1")) {
+                    messageOneCountdown.countDown();
+                } else if (message.data.equals("2")) {
+                    messageTwoCountdown.countDown();
+                } else {
+                    throw new RuntimeException("Bad message");
+                }
             }
 
             @Override
@@ -102,8 +107,25 @@ public class EventSourceClientTest {
         });
         eventSource.connect();
 
-        assertTrue("Didn't get an error on first failed connection", errorCountdown.await(2000, TimeUnit.MILLISECONDS));
-        assertTrue("Didn't get all messages", messageCountdown.await(2000, TimeUnit.MILLISECONDS));
+        assertTrue("Didn't get 1st message", messageOneCountdown.await(1000, TimeUnit.MILLISECONDS));
+
+        System.out.println("Stopping server..");
+        webServer.stop();
+        System.out.println("Stopped");
+        try {
+            webServer.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        System.out.println("KILLED");
+
+        assertTrue("Didn't get an error on first failed connection", errorCountdown.await(1000, TimeUnit.MILLISECONDS));
+        assertTrue("Didn't get all messages", messageTwoCountdown.await(1000, TimeUnit.MILLISECONDS));
     }
 
     private void assertSentAndReceived(final List<String> messages) throws IOException, InterruptedException {

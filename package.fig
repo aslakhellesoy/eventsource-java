@@ -1,0 +1,19 @@
+# mvn clean source:jar package
+# fig --publish com.github.aslakhellesoy-eventsource-client/0.1.1
+resource target/eventsource-client-0.1.1.jar
+resource target/eventsource-client-0.1.1-sources.jar
+
+config default
+  append CLASSPATH=@/target/eventsource-client-0.1.1.jar
+  append SOURCEPATH=@/target/eventsource-client-0.1.1-sources.jar
+end
+
+config build
+  include :default
+  include org.jboss.netty-netty/3.2.4.Final
+end
+
+config test
+  include :build
+  include junit/4.8.2
+end

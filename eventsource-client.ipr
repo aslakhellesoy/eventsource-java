@@ -221,6 +221,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/eventsource-client.iml" filepath="$PROJECT_DIR$/eventsource-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../webbit/webbit.iml" filepath="$PROJECT_DIR$/../webbit/webbit.iml" />
     </modules>
   </component>
   <component name="ProjectResources">
@@ -231,6 +232,7 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../webbit" vcs="Git" />
   </component>
   <component name="libraryTable">
     <library name="Maven: junit:junit:4.8.2">
@@ -266,59 +268,18 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-all/1.8.5/mockito-all-1.8.5-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.webbitserver:webbit:0.1.11">
+    <library name="Maven: org.webbitserver:webbit:0.1.12-SNAPSHOT">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.12-SNAPSHOT/webbit-0.1.12-SNAPSHOT.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.12-SNAPSHOT/webbit-0.1.12-SNAPSHOT-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.11/webbit-0.1.11-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/webbitserver/webbit/0.1.12-SNAPSHOT/webbit-0.1.12-SNAPSHOT-sources.jar!/" />
+        <root url="file://$PROJECT_DIR$/../webbit/src/main/java" />
       </SOURCES>
     </library>
-  </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ArtifactsStructureConfigurable.UI">
-        <settings>
-          <artifact-editor />
-          <splitter-proportions />
-        </settings>
-      </state>
-      <state key="FacetStructureConfigurable.UI">
-        <settings>
-          <splitter-proportions />
-        </settings>
-      </state>
-      <state key="GlobalLibrariesConfigurable.UI">
-        <settings>
-          <splitter-proportions />
-        </settings>
-      </state>
-      <state key="ModuleStructureConfigurable.UI">
-        <settings>
-          <splitter-proportions />
-        </settings>
-      </state>
-      <state key="ProjectJDKs.UI">
-        <settings>
-          <last-edited>1.6</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ProjectLibrariesConfigurable.UI">
-        <settings>
-          <splitter-proportions />
-        </settings>
-      </state>
-    </states>
   </component>
 </project>
 

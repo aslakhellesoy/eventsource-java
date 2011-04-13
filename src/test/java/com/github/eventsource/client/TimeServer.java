@@ -10,6 +10,7 @@ import org.webbitserver.netty.contrib.EventSourceMessage;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Date;
 
 import static java.lang.Thread.sleep;
 import static org.webbitserver.WebServers.createWebServer;
@@ -17,20 +18,27 @@ import static org.webbitserver.WebServers.createWebServer;
 /**
  * A simple server that burts out the numbers 1-10 upon connection.
  */
-public class BurstServer {
+public class TimeServer {
     public static void main(String[] args) throws IOException {
         createWebServer(8090)
                 .add("/", new HtmlHandler())
-                .add("/es", new BurstHandler())
+                .add("/es", new TimeHandler())
                 .start();
     }
 
-    private static class BurstHandler implements EventSourceHandler {
+    private static class TimeHandler implements EventSourceHandler {
         @Override
         public void onOpen(EventSourceConnection connection) throws Exception {
-            for (int i = 0; i < 10; i++) {
-                String event = new EventSourceMessage().data(String.valueOf(i)).end().toString();
+            System.out.println("OPEN - HEADERS = " + connection.httpRequest().allHeaders());
+            while(true) {
+                Date date = new Date();
+                String event = new EventSourceMessage()
+                        .data(date.toString())
+                        .id(date.getTime())
+                        .event("event-" + date.getTime())
+                        .build();
                 connection.send(event);
+                sleep(1000);
             }
         }
 

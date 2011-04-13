@@ -1,4 +1,4 @@
-0.1.0 (In Git)
+0.1.1 (In Git)
 ==================
 
 * First release

@@ -37,7 +37,6 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     private final Timer timer = new HashedWheelTimer();
     private Channel channel;
-    private boolean connecting = false;
     private boolean reconnectOnClose = true;
     private long reconnectionTimeMillis;
     private String lastEventId;
@@ -70,20 +69,16 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         }
         e.getChannel().write(request);
         channel = e.getChannel();
-        connecting = false;
     }
 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        Throwable ex = (Throwable) e.getValue();
-        eventSourceHandler.onError(ex);
         channel = null;
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        if (!connecting && reconnectOnClose) {
-            connecting = true;
+        if (reconnectOnClose) {
             timer.newTimeout(new TimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
@@ -105,7 +100,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
                 }
                 return;
             } else {
-                throw new RuntimeException("Not HTTP? " + line);
+                eventSourceHandler.onError(new RuntimeException("Not HTTP? " + line));
             }
         }
         if(!headerDone) {
@@ -117,7 +112,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
                 if(eventStreamOk) {
                     eventSourceHandler.onConnect();
                 } else {
-                    throw new RuntimeException("Not event stream");
+                    eventSourceHandler.onError(new RuntimeException("Not event stream"));
                 }
             }
         } else {

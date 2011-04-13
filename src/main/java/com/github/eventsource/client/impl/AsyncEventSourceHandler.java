@@ -29,20 +29,6 @@ public class AsyncEventSourceHandler implements EventSourceHandler {
     }
 
     @Override
-    public void onError(final Throwable error) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    eventSourceHandler.onError(error);
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    @Override
     public void onMessage(final String event, final MessageEvent message) {
         executor.execute(new Runnable() {
             @Override
@@ -51,6 +37,20 @@ public class AsyncEventSourceHandler implements EventSourceHandler {
                     eventSourceHandler.onMessage(event, message);
                 } catch (Exception e) {
                     onError(e);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onError(final Throwable error) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    eventSourceHandler.onError(error);
+                } catch (Throwable e) {
+                    e.printStackTrace();
                 }
             }
         });
