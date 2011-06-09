@@ -26,10 +26,6 @@
     </scm>
     <repositories>
         <repository>
-            <id>oss.sonatype.org</id>
-            <url>https://oss.sonatype.org/content/repositories/public/</url>
-        </repository>
-        <repository>
             <id>repository.jboss.org</id>
             <url>http://repository.jboss.org/nexus/content/groups/public/</url>
         </repository>
@@ -44,7 +40,7 @@
         <dependency>
             <groupId>org.webbitserver</groupId>
             <artifactId>webbit</artifactId>
-            <version>0.1.12-SNAPSHOT</version>
+            <version>0.1.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
