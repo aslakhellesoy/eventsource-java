@@ -1,16 +1,11 @@
 package com.github.eventsource.client.impl.netty;
 
-import com.github.eventsource.client.impl.ConnectionHandler;
+import com.github.eventsource.client.EventSourceException;
 import com.github.eventsource.client.EventSourceHandler;
+import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
 import org.jboss.netty.handler.codec.http.HttpMethod;
@@ -21,8 +16,10 @@ import org.jboss.netty.util.Timeout;
 import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +40,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     private boolean eventStreamOk;
     private boolean headerDone;
     private Integer status;
+    private AtomicBoolean reconnecting = new AtomicBoolean(false);
 
     public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri) {
         this.eventSourceHandler = eventSourceHandler;
@@ -79,40 +77,38 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if (reconnectOnClose) {
-            timer.newTimeout(new TimerTask() {
-                @Override
-                public void run(Timeout timeout) throws Exception {
-                    bootstrap.connect().await();
-                }
-            }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+            reconnect();
         }
     }
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         String line = (String) e.getMessage();
-        if(status == null) {
+        if (status == null) {
             Matcher statusMatcher = STATUS_PATTERN.matcher(line);
-            if(statusMatcher.matches()) {
+            if (statusMatcher.matches()) {
                 status = Integer.parseInt(statusMatcher.group(1));
-                if(status != 200) {
-                    throw new RuntimeException("Bad status: " + status);
+                if (status != 200) {
+                    eventSourceHandler.onError(new EventSourceException("Bad status from " + uri + ": " + status));
+                    reconnect();
                 }
                 return;
             } else {
-                eventSourceHandler.onError(new RuntimeException("Not HTTP? " + line));
+                eventSourceHandler.onError(new EventSourceException("Not HTTP? " + uri + ": " + line));
+                reconnect();
             }
         }
-        if(!headerDone) {
-            if(CONTENT_TYPE_PATTERN.matcher(line).matches()) {
+        if (!headerDone) {
+            if (CONTENT_TYPE_PATTERN.matcher(line).matches()) {
                 eventStreamOk = true;
             }
-            if(line.isEmpty()) {
+            if (line.isEmpty()) {
                 headerDone = true;
-                if(eventStreamOk) {
+                if (eventStreamOk) {
                     eventSourceHandler.onConnect();
                 } else {
-                    eventSourceHandler.onError(new RuntimeException("Not event stream"));
+                    eventSourceHandler.onError(new EventSourceException("Not event stream: " + uri + " (expected Content-Type: text/event-stream"));
+                    reconnect();
                 }
             }
         } else {
@@ -123,6 +119,9 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         Throwable error = e.getCause();
+        if(error instanceof ConnectException) {
+            error = new EventSourceException("Failed to connect to " + uri, error);
+        }
         eventSourceHandler.onError(error);
         ctx.getChannel().close();
     }
@@ -151,4 +150,17 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         return this;
     }
 
+    private void reconnect() {
+        if(!reconnecting.get()) {
+            System.out.println("RECONNECTING");
+            reconnecting.set(true);
+            timer.newTimeout(new TimerTask() {
+                @Override
+                public void run(Timeout timeout) throws Exception {
+                    reconnecting.set(false);
+                    bootstrap.connect().await();
+                }
+            }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+        }
+    }
 }
