@@ -47,7 +47,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         this.reconnectionTimeMillis = reconnectionTimeMillis;
         this.bootstrap = bootstrap;
         this.uri = uri;
-        this.messageDispatcher = new EventStreamParser(eventSourceHandler, uri.toString(), this);
+        this.messageDispatcher = new EventStreamParser(uri.toString(), eventSourceHandler, this);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         ctx.getChannel().close();
     }
 
-    public void setReconnectionTime(long reconnectionTimeMillis) {
+    public void setReconnectionTimeMillis(long reconnectionTimeMillis) {
         this.reconnectionTimeMillis = reconnectionTimeMillis;
     }
 

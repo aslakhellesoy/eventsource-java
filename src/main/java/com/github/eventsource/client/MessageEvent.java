@@ -11,6 +11,10 @@ public class MessageEvent {
         this.origin = origin;
     }
 
+    public MessageEvent(String data) {
+        this(data, null, null);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -3,6 +3,7 @@ package com.github.eventsource.client.impl;
 import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.MessageEvent;
 
+import java.io.StringReader;
 import java.util.regex.Pattern;
 
 /**
@@ -27,7 +28,7 @@ public class EventStreamParser {
     private String lastEventId;
     private String eventName = DEFAULT_EVENT;
 
-    public EventStreamParser(EventSourceHandler eventSourceHandler, String origin, ConnectionHandler connectionHandler) {
+    public EventStreamParser(String origin, EventSourceHandler eventSourceHandler, ConnectionHandler connectionHandler) {
         this.eventSourceHandler = eventSourceHandler;
         this.origin = origin;
         this.connectionHandler = connectionHandler;
@@ -56,7 +57,7 @@ public class EventStreamParser {
         } else if (EVENT.equals(field)) {
             eventName = value;
         } else if (RETRY.equals(field) && isNumber(value)) {
-            connectionHandler.setReconnectionTime(Long.parseLong(value));
+            connectionHandler.setReconnectionTimeMillis(Long.parseLong(value));
         }
     }
 
@@ -82,4 +83,12 @@ public class EventStreamParser {
         data = new StringBuffer();
         eventName = DEFAULT_EVENT;
     }
+
+    public void lines(String lines) {
+        String[] lineArray = lines.split("\n", -1);
+        for (String line : lineArray) {
+            line(line);
+        }
+    }
+
 }
