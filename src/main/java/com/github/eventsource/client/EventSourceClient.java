@@ -21,6 +21,7 @@ public class EventSourceClient {
     private final Executor eventExecutor;
 
     private final HashMap<Channel, ChannelUpstreamHandler> handlerMap = new HashMap<Channel, ChannelUpstreamHandler>();
+    private final ThreadLocal<ChannelUpstreamHandler> currentlyConnectingChannel = new ThreadLocal<ChannelUpstreamHandler>();
 
     public EventSourceClient() {
         this(Executors.newSingleThreadExecutor());
@@ -71,6 +72,15 @@ public class EventSourceClient {
                 System.err.println("Something wrong with dispatching");
             } else {
                 handler.handleUpstream(ctx, e);
+
+                if (e instanceof ChannelStateEvent) {
+                    ChannelStateEvent stateEvent = (ChannelStateEvent) e;
+                    if (stateEvent.getState() == ChannelState.BOUND && stateEvent.getValue() == null) {
+                        synchronized (handlerMap) {
+                            handlerMap.remove(ctx.getChannel());
+                        }
+                    }
+                }
             }
         }
     }
