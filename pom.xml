@@ -14,17 +14,24 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
     <scm>
         <connection>scm:git:https://github.com/andll/eventsource-java.git</connection>
         <developerConnection>scm:git:git@github.com:andll/eventsource-java.git</developerConnection>
         <url>git://github.com/andll/eventsource-java.git</url>
     </scm>
-    <repositories>
+
+    <distributionManagement>
         <repository>
-            <id>repository.jboss.org</id>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <id>mind.releases</id>
+            <url>http://nexus.mindlabs.com/content/repositories/mind.releases</url>
         </repository>
-    </repositories>
+        <snapshotRepository>
+            <id>mind.snapshots</id>
+            <url>http://nexus.mindlabs.com/content/repositories/mind.snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.jboss.netty</groupId>
