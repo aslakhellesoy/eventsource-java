@@ -33,7 +33,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     private final URI uri;
     private final EventStreamParser messageDispatcher;
 
-    private final Timer timer = new HashedWheelTimer();
+    private static final Timer TIMER = new HashedWheelTimer();
     private Channel channel;
     private boolean reconnectOnClose = true;
     private long reconnectionTimeMillis;
@@ -156,15 +156,19 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     }
 
     private void reconnect() {
-        if(!reconnecting.get()) {
-            reconnecting.set(true);
-            timer.newTimeout(new TimerTask() {
-                @Override
-                public void run(Timeout timeout) throws Exception {
-                    reconnecting.set(false);
-                    connect().await();
-                }
-            }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+        if(reconnectionTimeMillis >= 0) {
+            if(!reconnecting.get()) {
+                reconnecting.set(true);
+                TIMER.newTimeout(new TimerTask()
+                {
+                    @Override
+                    public void run(Timeout timeout) throws Exception
+                    {
+                        reconnecting.set(false);
+                        connect().await();
+                    }
+                }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+            }
         }
     }
 
