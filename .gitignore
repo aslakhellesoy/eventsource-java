@@ -1,6 +1,8 @@
 target
 out
 *.iws
+*.iml
+*.ipr
 *.swp
 .idea
 release.properties
