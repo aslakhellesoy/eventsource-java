@@ -13,15 +13,11 @@ import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-/**
- * created by andrey.chursin, 05.12.12
- */
 public class EventSourceClient {
     private final ClientBootstrap bootstrap;
     private final Executor eventExecutor;
 
     private final HashMap<Channel, ChannelUpstreamHandler> handlerMap = new HashMap<Channel, ChannelUpstreamHandler>();
-    private final ThreadLocal<ChannelUpstreamHandler> currentlyConnectingChannel = new ThreadLocal<ChannelUpstreamHandler>();
 
     public EventSourceClient() {
         this(Executors.newSingleThreadExecutor());

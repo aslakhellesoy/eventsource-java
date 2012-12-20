@@ -1,17 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.aslakhellesoy</groupId>
+    <groupId>com.github</groupId>
     <artifactId>eventsource-client</artifactId>
-    <name>${project.artifactId}</name>
+    <name>Java EventSource Client</name>
     <description>A Java EventSource Client</description>
-    <url>http://aslakhellesoy.github.com/eventsource-java</url>
-    <version>0.1.2.1</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>6</version>
-    </parent>
+
     <licenses>
         <license>
             <name>BSD License</name>
@@ -20,9 +16,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/aslakhellesoy/eventsource-java.git</connection>
-        <developerConnection>scm:git:git@github.com:aslakhellesoy/eventsource-java.git</developerConnection>
-        <url>git://github.com/aslakhellesoy/eventsource-java.git</url>
+        <connection>scm:git:https://github.com/andll/eventsource-java.git</connection>
+        <developerConnection>scm:git:git@github.com:andll/eventsource-java.git</developerConnection>
+        <url>git://github.com/andll/eventsource-java.git</url>
     </scm>
     <repositories>
         <repository>
