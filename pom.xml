@@ -17,7 +17,7 @@
 
     <scm>
         <connection>scm:git:https://github.com/andll/eventsource-java.git</connection>
-        <developerConnection>scm:git:git@github.com:andll/eventsource-java.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/andll/eventsource-java.git</developerConnection>
         <url>git://github.com/andll/eventsource-java.git</url>
     </scm>
 
