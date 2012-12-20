@@ -4,7 +4,7 @@
     <artifactId>eventsource-client</artifactId>
     <name>Java EventSource Client</name>
     <description>A Java EventSource Client</description>
-    <version>0.5</version>
+    <version>0.6-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <licenses>
