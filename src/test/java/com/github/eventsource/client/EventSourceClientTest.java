@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
@@ -84,7 +83,7 @@ public class EventSourceClientTest {
         webServer.start();
 
 
-        eventSource = new EventSource(Executors.newSingleThreadExecutor(), 100, URI.create("http://localhost:59504/es/hello"), new EventSourceHandler() {
+        eventSource = new EventSource(new EventSourceClient(), 100, URI.create("http://localhost:59504/es/hello"), new EventSourceHandler() {
             @Override
             public void onConnect() {
             }
@@ -129,7 +128,7 @@ public class EventSourceClientTest {
     }
 
     private void startClient(final List<String> expectedMessages, final CountDownLatch messageCountdown, final CountDownLatch errorCountdown, long reconnectionTimeMillis) throws InterruptedException {
-        eventSource = new EventSource(Executors.newSingleThreadExecutor(), reconnectionTimeMillis, URI.create("http://localhost:59504/es/hello?echoThis=yo"), new EventSourceHandler() {
+        eventSource = new EventSource(new EventSourceClient(), reconnectionTimeMillis, URI.create("http://localhost:59504/es/hello?echoThis=yo"), new EventSourceHandler() {
             int n = 0;
 
             @Override

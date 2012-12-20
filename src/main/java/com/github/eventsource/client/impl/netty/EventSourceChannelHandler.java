@@ -1,10 +1,10 @@
 package com.github.eventsource.client.impl.netty;
 
+import com.github.eventsource.client.EventSourceClient;
 import com.github.eventsource.client.EventSourceException;
 import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
-import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
@@ -17,6 +17,7 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,14 +26,14 @@ import java.util.regex.Pattern;
 
 public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
-    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
+    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream;?.*");
 
     private final EventSourceHandler eventSourceHandler;
-    private final ClientBootstrap bootstrap;
+    private final EventSourceClient client;
     private final URI uri;
     private final EventStreamParser messageDispatcher;
 
-    private final Timer timer = new HashedWheelTimer();
+    private static final Timer TIMER = new HashedWheelTimer();
     private Channel channel;
     private boolean reconnectOnClose = true;
     private long reconnectionTimeMillis;
@@ -42,10 +43,10 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     private Integer status;
     private AtomicBoolean reconnecting = new AtomicBoolean(false);
 
-    public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri) {
+    public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, EventSourceClient client, URI uri) {
         this.eventSourceHandler = eventSourceHandler;
         this.reconnectionTimeMillis = reconnectionTimeMillis;
-        this.bootstrap = bootstrap;
+        this.client = client;
         this.uri = uri;
         this.messageDispatcher = new EventStreamParser(uri.toString(), eventSourceHandler, this);
     }
@@ -143,6 +144,10 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         return this;
     }
 
+    public ChannelFuture connect() {
+        return client.connect(getConnectAddress(), this);
+    }
+
     public EventSourceChannelHandler join() throws InterruptedException {
         if (channel != null) {
             channel.getCloseFuture().await();
@@ -151,15 +156,23 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     }
 
     private void reconnect() {
-        if(!reconnecting.get()) {
-            reconnecting.set(true);
-            timer.newTimeout(new TimerTask() {
-                @Override
-                public void run(Timeout timeout) throws Exception {
-                    reconnecting.set(false);
-                    bootstrap.connect().await();
-                }
-            }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+        if(reconnectionTimeMillis >= 0) {
+            if(!reconnecting.get()) {
+                reconnecting.set(true);
+                TIMER.newTimeout(new TimerTask()
+                {
+                    @Override
+                    public void run(Timeout timeout) throws Exception
+                    {
+                        reconnecting.set(false);
+                        connect().await();
+                    }
+                }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
+            }
         }
+    }
+
+    public InetSocketAddress getConnectAddress() {
+        return new InetSocketAddress(uri.getHost(), uri.getPort() == -1 ? 80 : uri.getPort());
     }
 }
