@@ -84,4 +84,8 @@ public class EventSourceClient {
     public Executor getEventExecutor() {
         return eventExecutor;
     }
+
+    public void shutdown() {
+        bootstrap.releaseExternalResources();
+    }
 }
