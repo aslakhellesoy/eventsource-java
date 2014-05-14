@@ -18,6 +18,8 @@ import org.jboss.netty.util.TimerTask;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -31,6 +33,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     private final ClientBootstrap bootstrap;
     private final URI uri;
     private final EventStreamParser messageDispatcher;
+    private final Map<String,String> customRequestHeaders = new HashMap<String,String>();
 
     private final Timer timer = new HashedWheelTimer();
     private Channel channel;
@@ -64,6 +67,9 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         request.addHeader(Names.CACHE_CONTROL, "no-cache");
         if (lastEventId != null) {
             request.addHeader("Last-Event-ID", lastEventId);
+        }
+        for (String name : customRequestHeaders.keySet()) {
+            request.addHeader(name, customRequestHeaders.get(name));
         }
         e.getChannel().write(request);
         channel = e.getChannel();
@@ -148,6 +154,10 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
             channel.getCloseFuture().await();
         }
         return this;
+    }
+
+    public void setCustomRequestHeader(String name, String value) {
+        customRequestHeaders.put(name, value);
     }
 
     private void reconnect() {

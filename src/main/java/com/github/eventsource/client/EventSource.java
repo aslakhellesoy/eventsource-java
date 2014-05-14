@@ -2,6 +2,7 @@ package com.github.eventsource.client;
 
 import com.github.eventsource.client.impl.AsyncEventSourceHandler;
 import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
+import com.github.eventsource.client.impl.netty.ssl.SslContextFactory;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -12,13 +13,15 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.codec.frame.Delimiters;
 import org.jboss.netty.handler.codec.http.HttpRequestEncoder;
 import org.jboss.netty.handler.codec.string.StringDecoder;
+import org.jboss.netty.handler.ssl.SslHandler;
 
+import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class EventSource  {
+public class EventSource implements EventSourceHandler {
     public static final long DEFAULT_RECONNECTION_TIME_MILLIS = 2000;
 
     public static final int CONNECTING = 0;
@@ -27,6 +30,7 @@ public class EventSource  {
 
     private final ClientBootstrap bootstrap;
     private final EventSourceChannelHandler clientHandler;
+    private final EventSourceHandler eventSourceHandler;
 
     private int readyState;
 
@@ -44,6 +48,8 @@ public class EventSource  {
      * @see #close()
      */
     public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
+        this.eventSourceHandler = eventSourceHandler;
+
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
                         Executors.newSingleThreadExecutor(),
@@ -55,6 +61,13 @@ public class EventSource  {
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
+
+                if (uri.getScheme().equalsIgnoreCase("https")) {
+                    SSLEngine engine = SslContextFactory.getClientContext().createSSLEngine();
+                    engine.setUseClientMode(true);
+                    pipeline.addLast("ssl", new SslHandler(engine));
+                }
+
                 pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
                 pipeline.addLast("string", new StringDecoder());
 
@@ -73,9 +86,17 @@ public class EventSource  {
         this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, eventSourceHandler);
     }
 
+    public void setCustomRequestHeader(String name, String value) {
+        clientHandler.setCustomRequestHeader(name, value);
+    }
+
     public ChannelFuture connect() {
         readyState = CONNECTING;
         return bootstrap.connect();
+    }
+
+    public boolean isConnected() {
+        return (readyState == OPEN);
     }
 
     /**
@@ -84,6 +105,7 @@ public class EventSource  {
      * @return self
      */
     public EventSource close() {
+        readyState = CLOSED;
         clientHandler.close();
         return this;
     }
@@ -97,5 +119,21 @@ public class EventSource  {
     public EventSource join() throws InterruptedException {
         clientHandler.join();
         return this;
+    }
+
+    @Override
+    public void onConnect() throws Exception {
+        readyState = OPEN;
+        eventSourceHandler.onConnect();
+    }
+
+    @Override
+    public void onMessage(String event, MessageEvent message) throws Exception {
+        eventSourceHandler.onMessage(event, message);
+    }
+
+    @Override
+    public void onError(Throwable t) {
+        eventSourceHandler.onError(t);
     }
 }
