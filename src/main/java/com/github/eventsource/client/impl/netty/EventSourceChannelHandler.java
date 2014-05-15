@@ -68,6 +68,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         if (lastEventId != null) {
             request.addHeader("Last-Event-ID", lastEventId);
         }
+        // add any custom headers that have been set
         for (String name : customRequestHeaders.keySet()) {
             request.addHeader(name, customRequestHeaders.get(name));
         }
@@ -156,6 +157,12 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         return this;
     }
 
+    /**
+     * Sets a custom HTTP header that will be used when the request is made to establish the SSE channel.
+     *
+     * @param name the HTTP header name
+     * @param value the header value
+     */
     public void setCustomRequestHeader(String name, String value) {
         customRequestHeaders.put(name, value);
     }

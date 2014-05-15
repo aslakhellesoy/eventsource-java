@@ -59,7 +59,10 @@ public class EventSource implements EventSourceHandler {
                         Executors.newSingleThreadExecutor()));
         bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
 
-        clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
+        // add this class as the event source handler so the connect() call can be intercepted
+        AsyncEventSourceHandler asyncHandler = new AsyncEventSourceHandler(executor, this);
+
+        clientHandler = new EventSourceChannelHandler(asyncHandler, reconnectionTimeMillis, bootstrap, uri);
 
         bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() throws Exception {
@@ -96,6 +99,12 @@ public class EventSource implements EventSourceHandler {
         this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngine, eventSourceHandler);
     }
 
+    /**
+     * Sets a custom HTTP header that will be used when the request is made to establish the SSE channel.
+     *
+     * @param name the HTTP header name
+     * @param value the header value
+     */
     public void setCustomRequestHeader(String name, String value) {
         clientHandler.setCustomRequestHeader(name, value);
     }
@@ -133,17 +142,22 @@ public class EventSource implements EventSourceHandler {
 
     @Override
     public void onConnect() throws Exception {
+        // flag the connection as open
         readyState = OPEN;
+
+        // pass event to the proper handler
         eventSourceHandler.onConnect();
     }
 
     @Override
     public void onMessage(String event, MessageEvent message) throws Exception {
+        // pass event to the proper handler
         eventSourceHandler.onMessage(event, message);
     }
 
     @Override
     public void onError(Throwable t) {
+        // pass event to the proper handler
         eventSourceHandler.onError(t);
     }
 }
