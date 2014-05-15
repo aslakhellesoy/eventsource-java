@@ -2,7 +2,6 @@ package com.github.eventsource.client;
 
 import com.github.eventsource.client.impl.AsyncEventSourceHandler;
 import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
-import com.github.eventsource.client.impl.netty.ssl.SslContextFactory;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -48,6 +47,10 @@ public class EventSource implements EventSourceHandler {
      * @see #close()
      */
     public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
+        this(executor, reconnectionTimeMillis, uri, null, eventSourceHandler);
+    }
+
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, final SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
 
         bootstrap = new ClientBootstrap(
@@ -62,10 +65,9 @@ public class EventSource implements EventSourceHandler {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
 
-                if (uri.getScheme().equalsIgnoreCase("https")) {
-                    SSLEngine engine = SslContextFactory.getClientContext().createSSLEngine();
-                    engine.setUseClientMode(true);
-                    pipeline.addLast("ssl", new SslHandler(engine));
+                if (sslEngine != null) {
+                    sslEngine.setUseClientMode(true);
+                    pipeline.addLast("ssl", new SslHandler(sslEngine));
                 }
 
                 pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
@@ -79,11 +81,19 @@ public class EventSource implements EventSourceHandler {
     }
 
     public EventSource(String uri, EventSourceHandler eventSourceHandler) {
-        this(URI.create(uri), eventSourceHandler);
+        this(uri, null, eventSourceHandler);
+    }
+
+    public EventSource(String uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
+        this(URI.create(uri), sslEngine, eventSourceHandler);
     }
 
     public EventSource(URI uri, EventSourceHandler eventSourceHandler) {
-        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, eventSourceHandler);
+        this(uri, null, eventSourceHandler);
+    }
+
+    public EventSource(URI uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
+        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngine, eventSourceHandler);
     }
 
     public void setCustomRequestHeader(String name, String value) {
