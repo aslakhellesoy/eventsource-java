@@ -17,6 +17,7 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -157,6 +158,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
                 @Override
                 public void run(Timeout timeout) throws Exception {
                     reconnecting.set(false);
+                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
                     bootstrap.connect().await();
                 }
             }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);

@@ -28,6 +28,7 @@ public class EventSource  {
     private final ClientBootstrap bootstrap;
     private final EventSourceChannelHandler clientHandler;
 
+    private URI uri;
     private int readyState;
 
     /**
@@ -43,11 +44,12 @@ public class EventSource  {
      * @param eventSourceHandler receives events
      * @see #close()
      */
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, EventSourceHandler eventSourceHandler) {
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
                         Executors.newSingleThreadExecutor(),
                         Executors.newSingleThreadExecutor()));
+        uri = pURI;
         bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
 
         clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
@@ -75,6 +77,9 @@ public class EventSource  {
 
     public ChannelFuture connect() {
         readyState = CONNECTING;
+        
+        //To avoid perpetual "SocketUnresolvedException"
+        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
         return bootstrap.connect();
     }
 
