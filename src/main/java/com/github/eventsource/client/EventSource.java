@@ -48,10 +48,10 @@ public class EventSource implements EventSourceHandler {
      * @see #close()
      */
     public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, EventSourceHandler eventSourceHandler) {
-        this(executor, reconnectionTimeMillis, uri, null, eventSourceHandler);
+        this(executor, reconnectionTimeMillis, pURI, null, eventSourceHandler);
     }
 
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, final SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, final SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
 
         bootstrap = new ClientBootstrap(
@@ -154,5 +154,11 @@ public class EventSource implements EventSourceHandler {
     public void onError(Throwable t) {
         // pass event to the proper handler
         eventSourceHandler.onError(t);
+    }
+    
+    @Override
+    public void onClosed(boolean willReconnect) {
+        // pass event to the proper handler
+        eventSourceHandler.onClosed(willReconnect);
     }
 }
