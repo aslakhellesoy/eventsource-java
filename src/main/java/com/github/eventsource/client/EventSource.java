@@ -59,7 +59,12 @@ public class EventSource implements EventSourceHandler {
                         Executors.newSingleThreadExecutor(),
                         Executors.newSingleThreadExecutor()));
         uri = pURI;
-        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
+        int port = uri.getPort();
+        if (port==-1)
+        {
+        	port = (uri.getScheme().equals("https"))?443:80;
+        }
+        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), port));
 
         // add this class as the event source handler so the connect() call can be intercepted
         AsyncEventSourceHandler asyncHandler = new AsyncEventSourceHandler(executor, this);
@@ -105,7 +110,12 @@ public class EventSource implements EventSourceHandler {
         readyState = CONNECTING;
         
         //To avoid perpetual "SocketUnresolvedException"
-        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
+        int port = uri.getPort();
+        if (port==-1)
+        {
+        	port = (uri.getScheme().equals("https"))?443:80;
+        }
+        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), port));
         return bootstrap.connect();
     }
 
