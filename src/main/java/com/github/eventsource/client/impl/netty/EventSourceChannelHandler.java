@@ -77,6 +77,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    	eventSourceHandler.onClosed(reconnectOnClose);
         if (reconnectOnClose) {
             reconnect();
         }

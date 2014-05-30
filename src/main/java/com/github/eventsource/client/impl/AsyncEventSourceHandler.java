@@ -27,6 +27,21 @@ public class AsyncEventSourceHandler implements EventSourceHandler {
             }
         });
     }
+    
+    @Override
+    public void onClosed(final boolean willReconnect) 
+    {
+    	executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    eventSourceHandler.onClosed(willReconnect);
+                } catch (Exception e) {
+                    onError(e);
+                }
+            }
+        });
+    }
 
     @Override
     public void onMessage(final String event, final MessageEvent message) {

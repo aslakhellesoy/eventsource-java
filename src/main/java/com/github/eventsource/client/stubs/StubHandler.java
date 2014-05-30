@@ -31,6 +31,11 @@ public class StubHandler implements ConnectionHandler, EventSourceHandler {
     public void onConnect() throws Exception {
         connected = true;
     }
+    
+    @Override
+    public void onClosed(boolean willReconnect){
+        connected = false;
+    }
 
     @Override
     public void onMessage(String event, MessageEvent message) throws Exception {
