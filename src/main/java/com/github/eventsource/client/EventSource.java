@@ -2,6 +2,7 @@ package com.github.eventsource.client;
 
 import com.github.eventsource.client.impl.AsyncEventSourceHandler;
 import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
+
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
@@ -14,9 +15,13 @@ import org.jboss.netty.handler.codec.http.HttpRequestEncoder;
 import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -51,8 +56,23 @@ public class EventSource implements EventSourceHandler {
         this(executor, reconnectionTimeMillis, pURI, null, eventSourceHandler);
     }
 
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, final SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, SSLEngine pSSLEngine, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
+        
+        if (pURI.getScheme().equals("https") && pSSLEngine==null)
+        {
+			SSLContext sslContext;
+			try {
+				sslContext = SSLContext.getInstance("TLS");
+				try {
+					sslContext.init(null, null, null);
+					pSSLEngine = sslContext.createSSLEngine();
+				} catch (KeyManagementException e) {
+				}
+			} catch (NoSuchAlgorithmException e1) {
+			}
+        }
+        final SSLEngine sslEngine = pSSLEngine;
 
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
