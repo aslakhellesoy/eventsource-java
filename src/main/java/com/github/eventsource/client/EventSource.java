@@ -160,4 +160,9 @@ public class EventSource implements EventSourceHandler {
         // pass event to the proper handler
         eventSourceHandler.onError(t);
     }
+
+    @Override
+    public void onClosed(boolean willReconnect) {
+        eventSourceHandler.onClosed(willReconnect);
+    }
 }
