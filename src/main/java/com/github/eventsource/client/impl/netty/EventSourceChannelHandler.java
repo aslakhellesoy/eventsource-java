@@ -64,7 +64,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toString());
         request.addHeader(Names.ACCEPT, "text/event-stream");
         request.addHeader(Names.HOST, uri.getHost());
-        request.addHeader(Names.ORIGIN, "http://" + uri.getHost());
+        request.addHeader(Names.ORIGIN, uri.getScheme() + "://" + uri.getHost());
         request.addHeader(Names.CACHE_CONTROL, "no-cache");
         if (lastEventId != null) {
             request.addHeader("Last-Event-ID", lastEventId);
