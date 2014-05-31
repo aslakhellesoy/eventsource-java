@@ -56,28 +56,22 @@ public class EventSource implements EventSourceHandler {
         this(executor, reconnectionTimeMillis, pURI, null, eventSourceHandler);
     }
 
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, SSLEngine pSSLEngine, EventSourceHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI pURI, SSLEngineFactory fSSLEngine, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
         
-        if (pURI.getScheme().equals("https") && pSSLEngine==null)
-        {
-			SSLContext sslContext;
-			try {
-				sslContext = SSLContext.getInstance("TLS");
-				try {
-					sslContext.init(null, null, null);
-					pSSLEngine = sslContext.createSSLEngine();
-				} catch (KeyManagementException e) {
-				}
-			} catch (NoSuchAlgorithmException e1) {
-			}
-        }
-        final SSLEngine sslEngine = pSSLEngine;
 
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
                         Executors.newSingleThreadExecutor(),
                         Executors.newSingleThreadExecutor()));
+        if (pURI.getScheme().equals("https") && fSSLEngine == null) {
+        	fSSLEngine = new SSLEngineFactory();
+        } else {
+        	//If we don't do this then the pipeline still attempts to use SSL
+        	fSSLEngine = null;
+        }
+        final SSLEngineFactory SSLFactory = fSSLEngine;
+        
         uri = pURI;
         int port = uri.getPort();
         if (port==-1)
@@ -95,8 +89,9 @@ public class EventSource implements EventSourceHandler {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
 
-                if (sslEngine != null) {
-                    sslEngine.setUseClientMode(true);
+                if (SSLFactory != null) {
+                	SSLEngine sslEngine = SSLFactory.GetNewSSLEngine();
+                	sslEngine.setUseClientMode(true);
                     pipeline.addLast("ssl", new SslHandler(sslEngine));
                 }
 
@@ -114,16 +109,16 @@ public class EventSource implements EventSourceHandler {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(String uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
-        this(URI.create(uri), sslEngine, eventSourceHandler);
+    public EventSource(String uri, SSLEngineFactory sslEngineFactory, EventSourceHandler eventSourceHandler) {
+        this(URI.create(uri), sslEngineFactory, eventSourceHandler);
     }
 
     public EventSource(URI uri, EventSourceHandler eventSourceHandler) {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(URI uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
-        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngine, eventSourceHandler);
+    public EventSource(URI uri, SSLEngineFactory sslEngineFactory, EventSourceHandler eventSourceHandler) {
+        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngineFactory, eventSourceHandler);
     }
 
     public ChannelFuture connect() {
