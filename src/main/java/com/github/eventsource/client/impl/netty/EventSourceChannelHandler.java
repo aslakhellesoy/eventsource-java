@@ -159,7 +159,11 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
                 @Override
                 public void run(Timeout timeout) throws Exception {
                     reconnecting.set(false);
-                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
+                    int port = uri.getPort();
+                    if (port==-1) {
+                    	port = (uri.getScheme().equals("https"))?443:80;
+                    }
+                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), port));
                     bootstrap.connect().await();
                 }
             }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
