@@ -51,7 +51,7 @@ public class EventSource implements EventSourceHandler {
         this(executor, reconnectionTimeMillis, uri, null, eventSourceHandler);
     }
 
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, final SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
+    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, final SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
 
         bootstrap = new ClientBootstrap(
@@ -71,9 +71,10 @@ public class EventSource implements EventSourceHandler {
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
 
-                if (sslEngine != null) {
-                    sslEngine.setUseClientMode(true);
-                    pipeline.addLast("ssl", new SslHandler(sslEngine));
+                if (uri.getScheme().equals("https") && sslEngineProvider != null) {
+                    SSLEngine engine = sslEngineProvider.createSSLEngine();
+                    engine.setUseClientMode(true);
+                    pipeline.addLast("ssl", new SslHandler(engine));
                 }
 
                 pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
@@ -90,16 +91,16 @@ public class EventSource implements EventSourceHandler {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(String uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
-        this(URI.create(uri), sslEngine, eventSourceHandler);
+    public EventSource(String uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
+        this(URI.create(uri), sslEngineProvider, eventSourceHandler);
     }
 
     public EventSource(URI uri, EventSourceHandler eventSourceHandler) {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(URI uri, SSLEngine sslEngine, EventSourceHandler eventSourceHandler) {
-        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngine, eventSourceHandler);
+    public EventSource(URI uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
+        this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngineProvider, eventSourceHandler);
     }
 
     /**
