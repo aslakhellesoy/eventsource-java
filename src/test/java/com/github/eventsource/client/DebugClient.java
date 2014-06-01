@@ -21,6 +21,11 @@ public class DebugClient {
                 System.err.println("ERROR");
                 t.printStackTrace();
             }
+
+            @Override
+            public void onClosed(boolean willReconnect) {
+                System.err.println("CLOSED");
+            }
         });
 
         es.connect();
