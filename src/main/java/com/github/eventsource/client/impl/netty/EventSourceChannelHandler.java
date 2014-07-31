@@ -5,7 +5,15 @@ import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
+
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
 import org.jboss.netty.handler.codec.http.HttpMethod;
@@ -61,7 +69,9 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toString());
+        final String query = uri.getQuery();
+        final String path = uri.getPath() + (null != query && !query.isEmpty() ? "?" + query : "");
+        final HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, path);
         request.addHeader(Names.ACCEPT, "text/event-stream");
         request.addHeader(Names.HOST, uri.getHost());
         request.addHeader(Names.ORIGIN, uri.getScheme() + "://" + uri.getHost());
