@@ -184,6 +184,8 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     private void reconnect() {
         if (reconnecting.compareAndSet(false, true)) {
+            headerDone = false;
+            eventStreamOk = false;
             timer.newTimeout(new TimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
