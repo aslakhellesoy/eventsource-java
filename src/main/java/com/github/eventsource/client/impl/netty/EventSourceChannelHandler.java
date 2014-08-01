@@ -70,9 +70,9 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         final String query = uri.getQuery();
-        final String path = uri.getPath() + (null != query && !query.isEmpty() ? "?" + query : "");
+        final String path = uri.getPath() + (((null != query) && !query.isEmpty()) ? "?" + query : "");
         final int port = uri.getPort();
-        final String portPostfix = (port != 80 && port != 443) ? ":" + port : "";
+        final String portPostfix = ((port != -1) ? ":" + port : "");
         final String host = uri.getHost() + portPostfix;
         final HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, path);
         request.addHeader(Names.ACCEPT, "text/event-stream");
