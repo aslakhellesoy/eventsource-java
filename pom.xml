@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.whizzosoftware</groupId>
+    <groupId>com.github.flocsy</groupId>
     <artifactId>eventsource-client</artifactId>
     <name>${project.artifactId}</name>
     <description>A Java EventSource Client</description>
-    <url>http://whizzosoftware.github.com/eventsource-java</url>
-    <version>0.1.3-SNAPSHOT</version>
+    <url>http://github.com/flocsy/eventsource-java</url>
+    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <licenses>
         <license>
