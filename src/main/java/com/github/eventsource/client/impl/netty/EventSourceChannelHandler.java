@@ -5,7 +5,15 @@ import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
+
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.ExceptionEvent;
+
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
 import org.jboss.netty.handler.codec.http.HttpMethod;
@@ -17,7 +25,10 @@ import org.jboss.netty.util.Timer;
 import org.jboss.netty.util.TimerTask;
 
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -25,12 +36,13 @@ import java.util.regex.Pattern;
 
 public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
-    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
+    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream", Pattern.CASE_INSENSITIVE);
 
     private final EventSourceHandler eventSourceHandler;
     private final ClientBootstrap bootstrap;
     private final URI uri;
     private final EventStreamParser messageDispatcher;
+    private final Map<String,String> customRequestHeaders = new HashMap<String,String>();
 
     private final Timer timer = new HashedWheelTimer();
     private Channel channel;
@@ -57,13 +69,22 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toString());
+        final String query = uri.getQuery();
+        final String path = uri.getPath() + (((null != query) && !query.isEmpty()) ? "?" + query : "");
+        final int port = uri.getPort();
+        final String portPostfix = ((port != -1) ? ":" + port : "");
+        final String host = uri.getHost() + portPostfix;
+        final HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, path);
         request.addHeader(Names.ACCEPT, "text/event-stream");
-        request.addHeader(Names.HOST, uri.getHost());
-        request.addHeader(Names.ORIGIN, "http://" + uri.getHost());
+        request.addHeader(Names.HOST, host);
+        request.addHeader(Names.ORIGIN, uri.getScheme() + "://" + host);
         request.addHeader(Names.CACHE_CONTROL, "no-cache");
         if (lastEventId != null) {
             request.addHeader("Last-Event-ID", lastEventId);
+        }
+        // add any custom headers that have been set
+        for (String name : customRequestHeaders.keySet()) {
+            request.addHeader(name, customRequestHeaders.get(name));
         }
         e.getChannel().write(request);
         channel = e.getChannel();
@@ -76,6 +97,10 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        if (eventStreamOk) {
+            // call onClosed only if it was successfully opened (and onConnect was called)
+            eventSourceHandler.onClosed(reconnectOnClose);
+        }
         if (reconnectOnClose) {
             reconnect();
         }
@@ -150,13 +175,25 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         return this;
     }
 
+    /**
+     * Sets a custom HTTP header that will be used when the request is made to establish the SSE channel.
+     *
+     * @param name the HTTP header name
+     * @param value the header value
+     */
+    public void setCustomRequestHeader(String name, String value) {
+        customRequestHeaders.put(name, value);
+    }
+
     private void reconnect() {
-        if(!reconnecting.get()) {
-            reconnecting.set(true);
+        if (reconnecting.compareAndSet(false, true)) {
+            headerDone = false;
+            eventStreamOk = false;
             timer.newTimeout(new TimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
                     reconnecting.set(false);
+                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
                     bootstrap.connect().await();
                 }
             }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);

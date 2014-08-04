@@ -33,6 +33,11 @@ public class StubHandler implements ConnectionHandler, EventSourceHandler {
     }
 
     @Override
+    public void onClosed(boolean willReconnect){
+        connected = false;
+    }
+
+    @Override
     public void onMessage(String event, MessageEvent message) throws Exception {
         getMessageEvents(event).add(message);
     }
