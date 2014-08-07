@@ -1,5 +1,6 @@
 package com.github.eventsource.client.impl.netty;
 
+import com.github.eventsource.client.EventSource;
 import com.github.eventsource.client.EventSourceException;
 import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.impl.ConnectionHandler;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
 
 public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
-    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream(;.*)?", Pattern.CASE_INSENSITIVE);
 
     private final EventSourceHandler eventSourceHandler;
     private final ClientBootstrap bootstrap;
@@ -193,7 +194,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
                 @Override
                 public void run(Timeout timeout) throws Exception {
                     reconnecting.set(false);
-                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
+                    bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), EventSource.getPort(uri)));
                     bootstrap.connect().await();
                 }
             }, reconnectionTimeMillis, TimeUnit.MILLISECONDS);
