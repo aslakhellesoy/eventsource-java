@@ -126,6 +126,10 @@ public class EventSource implements EventSourceHandler {
         return (readyState == OPEN);
     }
 
+    public int getReadyState() {
+        return readyState;
+    }
+
     /**
      * Close the connection
      *
@@ -174,7 +178,7 @@ public class EventSource implements EventSourceHandler {
         eventSourceHandler.onClosed(willReconnect);
     }
 
-    protected int getPort(URI uri) {
+    static public int getPort(URI uri) {
         int port = uri.getPort();
         if (port == -1) {
             port = (uri.getScheme().equals("https")) ? 443 : 80;
