@@ -8,3 +8,4 @@ pom.xml.releaseBackup
 .DS_Store
 pom.xml.asc
 .gradle
+/build

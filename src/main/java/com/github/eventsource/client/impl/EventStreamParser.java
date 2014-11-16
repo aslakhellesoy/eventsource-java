@@ -3,7 +3,6 @@ package com.github.eventsource.client.impl;
 import com.github.eventsource.client.EventSourceHandler;
 import com.github.eventsource.client.MessageEvent;
 
-import java.io.StringReader;
 import java.util.regex.Pattern;
 
 /**

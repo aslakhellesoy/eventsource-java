@@ -17,7 +17,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class EventSource implements EventSourceHandler {
@@ -47,11 +47,11 @@ public class EventSource implements EventSourceHandler {
      * @param eventSourceHandler receives events
      * @see #close()
      */
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
+    protected EventSource(ExecutorService executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
         this(executor, reconnectionTimeMillis, uri, null, eventSourceHandler);
     }
 
-    public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, final SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
+    protected EventSource(ExecutorService executor, long reconnectionTimeMillis, final URI uri, final SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
         this.eventSourceHandler = eventSourceHandler;
 
         bootstrap = new ClientBootstrap(
@@ -62,6 +62,7 @@ public class EventSource implements EventSourceHandler {
 
         bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), getPort(uri)));
 
+//        clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
         // add this class as the event source handler so the connect() call can be intercepted
         AsyncEventSourceHandler asyncHandler = new AsyncEventSourceHandler(executor, this);
 
@@ -87,19 +88,19 @@ public class EventSource implements EventSourceHandler {
         });
     }
 
-    public EventSource(String uri, EventSourceHandler eventSourceHandler) {
+    protected EventSource(String uri, EventSourceHandler eventSourceHandler) {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(String uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
+    protected EventSource(String uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
         this(URI.create(uri), sslEngineProvider, eventSourceHandler);
     }
 
-    public EventSource(URI uri, EventSourceHandler eventSourceHandler) {
+    protected EventSource(URI uri, EventSourceHandler eventSourceHandler) {
         this(uri, null, eventSourceHandler);
     }
 
-    public EventSource(URI uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
+    protected EventSource(URI uri, SSLEngineProvider sslEngineProvider, EventSourceHandler eventSourceHandler) {
         this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, sslEngineProvider, eventSourceHandler);
     }
 

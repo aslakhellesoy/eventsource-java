@@ -161,7 +161,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
         this.lastEventId = lastEventId;
     }
 
-    public EventSourceChannelHandler close() {
+    public synchronized EventSourceChannelHandler close() {
         reconnectOnClose = false;
         if (channel != null) {
             channel.close();
