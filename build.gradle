@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = GROUP
+version = VERSION
+
+description = "SSE EventSource Java Client"
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+repositories {
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+dependencies {
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.6'
+    compile group: 'org.jboss.netty', name: 'netty', version:'3.2.4.Final'
+    testCompile group: 'org.webbitserver', name: 'webbit', version:'0.1.13'
+    testCompile group: 'junit', name: 'junit', version:'4.8.2'
+    testCompile group: 'org.mockito', name: 'mockito-all', version:'1.8.5'
+}

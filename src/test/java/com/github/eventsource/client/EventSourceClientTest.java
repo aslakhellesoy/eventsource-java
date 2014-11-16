@@ -105,6 +105,11 @@ public class EventSourceClientTest {
                 System.out.println("ERROR: " + t);
                 errorCountdown.countDown();
             }
+
+            @Override
+            public void onClosed(boolean willReconnect) {
+                System.out.println("CLOSED");
+            }
         });
         eventSource.connect();
 
@@ -146,6 +151,10 @@ public class EventSourceClientTest {
             @Override
             public void onError(Throwable t) {
                 errorCountdown.countDown();
+            }
+
+            @Override
+            public void onClosed(boolean willReconnect) {
             }
         });
         eventSource.connect().await();

@@ -1,17 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.aslakhellesoy</groupId>
+    <groupId>com.github.flocsy</groupId>
     <artifactId>eventsource-client</artifactId>
     <name>${project.artifactId}</name>
     <description>A Java EventSource Client</description>
-    <url>http://aslakhellesoy.github.com/eventsource-java</url>
-    <version>0.1.2.1</version>
+    <url>http://github.com/flocsy/eventsource-java</url>
+    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>6</version>
-    </parent>
     <licenses>
         <license>
             <name>BSD License</name>
@@ -19,18 +14,13 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    <scm>
-        <connection>scm:git:git://github.com/aslakhellesoy/eventsource-java.git</connection>
-        <developerConnection>scm:git:git@github.com:aslakhellesoy/eventsource-java.git</developerConnection>
-        <url>git://github.com/aslakhellesoy/eventsource-java.git</url>
-    </scm>
-    <repositories>
-        <repository>
-            <id>repository.jboss.org</id>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.6</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.jboss.netty</groupId>
             <artifactId>netty</artifactId>
@@ -67,23 +57,18 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.1</version>
-                <configuration>
-                    <useAgent>true</useAgent>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>nx-releases</id>
+            <name>Nexus Releases</name>
+            <url>${nexus.releases.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>nx-snapshots</id>
+            <name>Nexus Snapshots</name>
+            <url>${nexus.snapshots.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
